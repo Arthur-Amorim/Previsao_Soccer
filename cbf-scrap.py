@@ -1,8 +1,16 @@
-import requests
 import pandas as pd
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 import os
+import time
+
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from webdriver_manager.chrome import ChromeDriverManager
 
 # -----------------------------
 # CONFIGURAÇÕES
@@ -11,9 +19,18 @@ BASE_URL = "https://www.cbf.com.br/futebol-brasileiro/calendario"
 CSV_FILE = "jogos.csv"
 LAST_RUN_FILE = "last_run.txt"
 
-HEADERS = {
-    "User-Agent": "Mozilla/5.0"
-}
+# -----------------------------
+# SELENIUM SETUP
+# -----------------------------
+def get_driver():
+    chrome_options = Options()
+    # chrome_options.add_argument("--headless")  # ative em produção
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--window-size=1920,1080")
+
+    service = Service(ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service, options=chrome_options)
+    return driver
 
 # -----------------------------
 # FUNÇÕES AUXILIARES
@@ -24,38 +41,42 @@ def read_last_run_date():
     with open(LAST_RUN_FILE, "r") as f:
         return datetime.strptime(f.read().strip(), "%Y-%m-%d").date()
 
-
 def write_last_run_date(date):
     with open(LAST_RUN_FILE, "w") as f:
         f.write(date.strftime("%Y-%m-%d"))
-
 
 def daterange(start_date, end_date):
     for n in range((end_date - start_date).days):
         yield start_date + timedelta(days=n)
 
-
 # -----------------------------
-# SCRAPER DO DIA
+# SCRAPER DO DIA (SELENIUM)
 # -----------------------------
-def scrape_day(date):
+def scrape_day(driver, date):
     url = f"{BASE_URL}?data={date.strftime('%Y-%m-%d')}"
-    response = requests.get(url, headers=HEADERS, timeout=15)
+    driver.get(url)
 
-    if response.status_code != 200:   # Verifica se a requisição foi bem-sucedida
+    try:
+        WebDriverWait(driver, 30).until(
+            EC.presence_of_element_located(
+                (By.CSS_SELECTOR, "div[class*='styles_listGames']")
+            )
+        )
+    except:
         return []
 
-    soup = BeautifulSoup(response.text, "lxml")
+    time.sleep(1)
+
+    soup = BeautifulSoup(driver.page_source, "lxml")
     jogos = []
 
-    root = soup.select_one("div.styles_listGames__D8ydc")
+    root = soup.select_one("div[class*='styles_listGames']")
     if not root:
-        return jogos  # dia sem jogos
+        return jogos
 
-    for grupo in root.select("div.styles_groupGames__9XT_6"):
-        # -------------------------
-        # Campeonato
-        # -------------------------
+    grupos = root.select("div[class*='styles_groupGames']")
+
+    for grupo in grupos:
         h2 = grupo.select_one("h2")
         campeonato = h2.get_text(strip=True) if h2 else None
 
@@ -69,59 +90,32 @@ def scrape_day(date):
 
         for li in ul.select("li.splide__slide"):
             try:
-                # -------------------------
-                # Times
-                # -------------------------
                 times = li.select("strong[title]")
                 mandante = times[0]["title"].strip()
                 visitante = times[1]["title"].strip()
 
-                # -------------------------
-                # Gols (se houver)
-                # -------------------------
-                gols = li.select("span.styles_gol__wQ4q9")
-                gols_mandante = int(gols[0].text) if len(gols) > 0 else None
-                gols_visitante = int(gols[1].text) if len(gols) > 1 else None
+                gols = li.select("span[class*='styles_gol']")
+                gols_mandante = gols[0].text if len(gols) > 0 else None
+                gols_visitante = gols[1].text if len(gols) > 1 else None
 
-                # -------------------------
-                # Infos adicionais
-                # -------------------------
-                info = li.select_one("div.styles_informations__K0gXK")
-
-                numero_jogo = cidade = estado = estadio = hora = None
+                info = li.select_one("div[class*='styles_informations']")
+                hora = None
 
                 if info:
-                    num = info.select_one("span.styles_numberGame__dZ2sG")
-                    numero_jogo = num.get_text(strip=True) if num else None
-
                     p = info.select_one("p")
                     if p:
                         linhas = [l.strip() for l in p.get_text("\n").split("\n")]
-
-                        # 07/12/2025 - 16:00
-                        if len(linhas) >= 1:
+                        if linhas:
                             _, _, hora = linhas[0].partition(" - ")
-
-                        # São Paulo - SP
-                        if len(linhas) >= 2:
-                            cidade, _, estado = linhas[1].partition(" - ")
-
-                        # Estádio
-                        if len(linhas) >= 3:
-                            estadio = linhas[2]
 
                 jogos.append({
                     "data": date.strftime("%Y-%m-%d"),
                     "campeonato": campeonato,
-                    "numero_jogo": numero_jogo,
                     "mandante": mandante,
                     "visitante": visitante,
                     "gols_mandante": gols_mandante,
                     "gols_visitante": gols_visitante,
-                    "hora": hora,
-                    "cidade": cidade,
-                    "estado": estado,
-                    "estadio": estadio
+                    "hora": hora
                 })
 
             except Exception as e:
@@ -133,11 +127,11 @@ def scrape_day(date):
 # MAIN
 # -----------------------------
 def main():
-    today = datetime.today().date()
+    today = (datetime.today() + timedelta(days=1)).date()
     last_date = read_last_run_date()
 
     if last_date is None:
-        print("Nenhuma data anterior encontrada. Defina last_run.txt.")
+        print("Nenhuma data anterior encontrada.")
         return
 
     dates_to_run = list(daterange(last_date + timedelta(days=1), today))
@@ -146,36 +140,103 @@ def main():
         print("Nenhuma data nova para processar.")
         return
 
+    driver = get_driver()
     all_games = []
 
-    for date in dates_to_run:
-        print(f"Coletando jogos de {date}")
-        jogos = scrape_day(date)
-        all_games.extend(jogos)
+    try:
+        for date in dates_to_run:
+            print(f"Coletando jogos de {date}")
+            jogos = scrape_day(driver, date)
+            all_games.extend(jogos)
+    finally:
+        driver.quit()
 
     if not all_games:
-        print("Nenhum jogo encontrado no período.")
+        print("Nenhum jogo encontrado.")
         write_last_run_date(dates_to_run[-1])
         return
 
     df_new = pd.DataFrame(all_games)
 
-    if os.path.exists(CSV_FILE):
-        df_old = pd.read_csv(CSV_FILE)
-        df_final = pd.concat([df_old, df_new], ignore_index=True)
-    else:
-        df_final = df_new
+    # -----------------------------
+    # FORMATO FINAL SOLICITADO
+    # -----------------------------
+    df_new["gols_mandante"] = pd.to_numeric(df_new["gols_mandante"], errors="coerce")
+    df_new["gols_visitante"] = pd.to_numeric(df_new["gols_visitante"], errors="coerce")
 
-    df_final.to_csv(CSV_FILE, index=False)
+    df_new["Country"] = "Brazil"
+
+    def normaliza_liga(nome):
+        if not isinstance(nome, str):
+            return None
+        nome = nome.lower()
+        if "série a" in nome or "serie a" in nome:
+            return "Serie A"
+        if "série b" in nome or "serie b" in nome:
+            return "Serie B"
+        return nome.title()
+
+    df_new["League"] = df_new["campeonato"].apply(normaliza_liga)
+    df_new["Year"] = pd.to_datetime(df_new["data"]).dt.year.astype(float)
+
+    df_new["Date"] = pd.to_datetime(df_new["data"]).apply(
+        lambda d: f"{d.day}/{d.month}/{d.year}"
+    )
+
+    df_new["Time"] = df_new["hora"].fillna("")
+    df_new["Home"] = df_new["mandante"]
+    df_new["Away"] = df_new["visitante"]
+    df_new["HG"] = df_new["gols_mandante"].astype(float)
+    df_new["AG"] = df_new["gols_visitante"].astype(float)
+
+    def resultado(row):
+        if pd.isna(row["HG"]) or pd.isna(row["AG"]):
+            return None
+        if row["HG"] > row["AG"]:
+            return "H"
+        elif row["HG"] < row["AG"]:
+            return "A"
+        else:
+            return "D"
+
+    df_new["Res"] = df_new.apply(resultado, axis=1)
+
+    df_new = df_new[
+        ["Country", "League", "Year", "Date", "Time", "Home", "Away", "HG", "AG", "Res"]
+    ]
+
+    # -----------------------------
+    # APPEND SEGURO AO CSV (RECOMENDADO)
+    # -----------------------------
+    # -----------------------------
+    # APPEND REAL AO CSV (SEM SOBRESCREVER)
+    # -----------------------------
+    file_exists = os.path.exists(CSV_FILE)
+
+    df_new.to_csv(
+        CSV_FILE,
+        mode="a",                 # append
+        header=not file_exists,   # escreve cabeçalho só se o arquivo NÃO existir
+        index=False,
+        encoding="utf-8-sig"
+    )
 
     write_last_run_date(dates_to_run[-1])
 
     print("Atualização concluída com sucesso.")
+    print(f"{len(df_new)} linhas adicionadas ao CSV.")
+    write_last_run_date(dates_to_run[-1])
 
 
-if __name__ == "__main__":
-    main()
+main()
 
 
-# Por algum motivo, ele não consegue entrar em for grupo in root.select("div.styles_groupGames__9XT_6"):
-# para ler as informações dos jogos e campeonatos
+####################################################
+# Tarefa: Encontrar modo de corrigir nomes
+# Tarefa: Buscar Odds em sites de aposta para comparar com o modelo preditivo
+# Tarefa: Fazer bloco para adicionar coisas relacionadas a libertadores (ver se vale mesmo a pena), pauslistão e outros campeonatos
+# Anotações: para funcionar deve conter arquivo jogos.csv minimamente preenchido e last_run com data da ultima atualização
+# Data: 13/12/2025
+# Autor: Arthur Amorim 
+####################################################
+
