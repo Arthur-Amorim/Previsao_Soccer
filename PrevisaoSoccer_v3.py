@@ -190,7 +190,7 @@ def predict_match(home_team, away_team):
 # =========================================================
 # 9. EXEMPLO DE USO
 # =========================================================
-print(predict_match("Corinthians", "Santos"))
+print(predict_match("Corinthians", "Cruzeiro"))
 
 
 # Tarefas: Implementar mais parametros 

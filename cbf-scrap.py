@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 import os
 import time
+import unicodedata
 
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -18,6 +19,46 @@ from webdriver_manager.chrome import ChromeDriverManager
 BASE_URL = "https://www.cbf.com.br/futebol-brasileiro/calendario"
 CSV_FILE = "jogos.csv"
 LAST_RUN_FILE = "last_run.txt"
+
+MAPEAMENTO_TIMES = {
+    # MG
+    "Atlético Mineiro Saf": "Atlético-MG",
+    "Cruzeiro Saf": "Cruzeiro",
+    "America Saf": "América",
+
+    # BA
+    "Bahia": "Bahia",
+    "Vitória": "Vitória",
+
+    # RJ
+    "Botafogo": "Botafogo",
+    "Flamengo": "Flamengo",
+    "Fluminense": "Fluminense",
+    "Vasco da Gama S.a.f.": "Vasco da Gama",
+
+    # SP
+    "Corinthians": "Corinthians",
+    "Palmeiras": "Palmeiras",
+    "Santos Fc": "Santos",
+    "São Paulo": "São Paulo",
+    "Mirassol": "Mirassol",
+    "Red Bull Bragantino": "Red Bull Bragantino",
+
+    # RS
+    "Grêmio": "Grêmio",
+    "Internacional": "Internacional",
+    "Juventude": "Juventude",
+
+    # CE
+    "Ceará": "Ceará",
+    "Fortaleza": "Fortaleza",
+    "Fortaleza Ec Saf": "Fortaleza",
+
+    # PE
+    "Sport Recife": "Sport",
+}
+
+
 
 # -----------------------------
 # SELENIUM SETUP
@@ -123,6 +164,26 @@ def scrape_day(driver, date):
 
     return jogos
 
+def padroniza_time(nome):
+    if not isinstance(nome, str):
+        return None
+
+    nome = nome.strip()
+
+    nome_padrao = MAPEAMENTO_TIMES.get(nome)
+
+    if nome_padrao is None:
+        print(f"[AVISO] Time não mapeado: '{nome}'")
+        return remove_acentos(nome)  # também remove acento do original
+
+    return remove_acentos(nome_padrao)
+
+def remove_acentos(texto):
+    if not isinstance(texto, str):
+        return texto
+    return unicodedata.normalize("NFKD", texto).encode("ascii", "ignore").decode("ascii")
+
+
 # -----------------------------
 # MAIN
 # -----------------------------
@@ -184,8 +245,8 @@ def main():
     )
 
     df_new["Time"] = df_new["hora"].fillna("")
-    df_new["Home"] = df_new["mandante"]
-    df_new["Away"] = df_new["visitante"]
+    df_new["Home"] = df_new["mandante"].apply(padroniza_time)
+    df_new["Away"] = df_new["visitante"].apply(padroniza_time)
     df_new["HG"] = df_new["gols_mandante"].astype(float)
     df_new["AG"] = df_new["gols_visitante"].astype(float)
 
@@ -232,11 +293,11 @@ main()
 
 
 ####################################################
-# Tarefa: Encontrar modo de corrigir nomes
 # Tarefa: Buscar Odds em sites de aposta para comparar com o modelo preditivo
-# Tarefa: Fazer bloco para adicionar coisas relacionadas a libertadores (ver se vale mesmo a pena), pauslistão e outros campeonatos
+    # https://www.oddsagora.com.br/football/brazil/copa-betano-do-brasil/
+    # https://www.betbrain.com/football-betting-odds/brazil
 # Anotações: para funcionar deve conter arquivo jogos.csv minimamente preenchido e last_run com data da ultima atualização
-# Data: 13/12/2025
+# Data: 14/12/2025
 # Autor: Arthur Amorim 
 ####################################################
 

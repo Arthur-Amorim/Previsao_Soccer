@@ -1,4 +1,4 @@
-﻿Country,League,Season,Date,Time,Home,Away,HG,AG,Res,PSCH,PSCD,PSCA,MaxCH,MaxCD,MaxCA,AvgCH,AvgCD,AvgCA,BFECH,BFECD,BFECA,B365CH,B365CD,B36CA,data,campeonato,numero_jogo,mandante,visitante,gols_mandante,gols_visitante,hora,cidade,estado,estadio
+﻿Country,League,Season,Date,Time,Home,Away,HG,AG,Res,PSCH,PSCD,PSCA,MaxCH,MaxCD,MaxCA,AvgCH,AvgCD,AvgCA,BFECH,BFECD,BFECA,B365CH,B365CD,B36CA
 Brazil,Serie A,2012.0,5/19/2012,22:30,Palmeiras,Portuguesa,1.0,1.0,D,"1,75","3,86","5,25","1,76","3,87","5,31","1,69","3,5","4,9",,,,,,,,,,,,,,,,,
 Brazil,Serie A,2012.0,5/19/2012,22:30,Sport Recife,Flamengo RJ,1.0,1.0,D,"2,83","3,39","2,68","2,83","3,42","2,7","2,59","3,23","2,58",,,,,,,,,,,,,,,,,
 Brazil,Serie A,2012.0,5/20/2012,1:00,Figueirense,Nautico,2.0,1.0,H,"1,6","4,04","6,72","1,67","4,05","7,22","1,59","3,67","5,64",,,,,,,,,,,,,,,,,
@@ -5318,17 +5318,16 @@ Brazil,Serie A,2025.0,12/7/2025,19:00,Fluminense,Bahia,2.0,0.0,H,"1,79","3,66","
 Brazil,Serie A,2025.0,12/7/2025,19:00,Internacional,Bragantino,3.0,1.0,H,"1,56","4,19","5,57","1,65","4,25",6,"1,59","3,98","5,32","1,62","4,5","5,9","1,57","3,8","5,5",,,,,,,,,,,
 Brazil,Serie A,2025.0,12/7/2025,19:00,Santos,Cruzeiro,3.0,0.0,H,"1,35","4,8","9,47","1,4","4,8","10,5","1,35","4,68","8,88","1,4",5,"10,5","1,33","4,75",9,,,,,,,,,,,
 Brazil,Serie A,2025.0,12/7/2025,19:00,Sport Recife,Gremio,0.0,4.0,A,"4,04","3,64","1,87","4,2","3,75","1,95","3,82","3,64","1,88","4,1","3,75",2,"3,8","3,6","1,91",,,,,,,,,,,
-Brazil,Serie A,2025.0,12/7/2025,19:00,Vitoria,Sao Paulo,1.0,0.0,H,"2,47","3,08","3,1","2,5","3,25","3,14","2,47","3,12","2,9","2,62","3,25","3,2","2,5","3,2","2,82",,,,,,,,,,,
-Brazil,Serie A,2025.0,6/12/2025,18:30,Mirassol,Flamengo,3.0,3.0,D
+Brazil,Serie A,2025.0,12/7/2025,19:00,Vitoria,Sao Paulo,1.0,0.0,H,"2,47","3,08","3,1","2,5","3,25","3,14","2,47","3,12","2,9","2,62","3,25","3,2","2,5","3,2","2,82",,,,,,,,,,,Brazil,Serie A,2025.0,6/12/2025,18:30,Mirassol,Flamengo,3.0,3.0,D
 Brazil,Serie A,2025.0,7/12/2025,16:00,Fluminense,Bahia,2.0,0.0,H
-Brazil,Serie A,2025.0,7/12/2025,16:00,Botafogo,Fortaleza Ec Saf,4.0,2.0,H
+Brazil,Serie A,2025.0,7/12/2025,16:00,Botafogo,Fortaleza,4.0,2.0,H
 Brazil,Serie A,2025.0,7/12/2025,16:00,Corinthians,Juventude,1.0,1.0,D
-Brazil,Serie A,2025.0,7/12/2025,16:00,Santos Fc,Cruzeiro Saf,3.0,0.0,H
-Brazil,Serie A,2025.0,7/12/2025,16:00,Atlético Mineiro Saf,Vasco da Gama S.a.f.,5.0,0.0,H
+Brazil,Serie A,2025.0,7/12/2025,16:00,Santos,Cruzeiro,3.0,0.0,H
+Brazil,Serie A,2025.0,7/12/2025,16:00,Atletico-MG,Vasco da Gama,5.0,0.0,H
 Brazil,Serie A,2025.0,7/12/2025,16:00,Internacional,Red Bull Bragantino,3.0,1.0,H
-Brazil,Serie A,2025.0,7/12/2025,16:00,Vitória,São Paulo,1.0,0.0,H
-Brazil,Serie A,2025.0,7/12/2025,16:00,Ceará,Palmeiras,1.0,3.0,A
-Brazil,Serie A,2025.0,7/12/2025,16:00,Sport Recife,Grêmio,0.0,4.0,A
-Brazil,Copa Do Brasil - Sub-20,2025.0,9/12/2025,20:00,America Saf,São Paulo,1.0,2.0,A
-Brazil,Copa Do Brasil - Profissional,2025.0,10/12/2025,21:30,Cruzeiro Saf,Corinthians,0.0,1.0,A
-Brazil,Copa Do Brasil - Profissional,2025.0,11/12/2025,20:00,Vasco da Gama S.a.f.,Fluminense,2.0,1.0,H
+Brazil,Serie A,2025.0,7/12/2025,16:00,Vitoria,Sao Paulo,1.0,0.0,H
+Brazil,Serie A,2025.0,7/12/2025,16:00,Ceara,Palmeiras,1.0,3.0,A
+Brazil,Serie A,2025.0,7/12/2025,16:00,Sport,Gremio,0.0,4.0,A
+Brazil,Copa Do Brasil - Sub-20,2025.0,9/12/2025,20:00,America,Sao Paulo,1.0,2.0,A
+Brazil,Copa Do Brasil - Profissional,2025.0,10/12/2025,21:30,Cruzeiro,Corinthians,0.0,1.0,A
+Brazil,Copa Do Brasil - Profissional,2025.0,11/12/2025,20:00,Vasco da Gama,Fluminense,2.0,1.0,H
